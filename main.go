@@ -65,6 +65,7 @@ func main() {
 	//db.Create(&animal)
 	//fmt.Println("is new: ", db.NewRecord(&animal))
 
+	////////////////////////////////////query data
 	//var a Animal
 	//db.First(&a)
 	//fmt.Println("a: ", a)
@@ -254,4 +255,83 @@ func main() {
 	//分组使用 table + select + group + having + rows/scan
 
 	/////////////////////  https://gorm.io/docs/query.html joins
+	//rows, err := db.Table("animals").Joins("join owners on animals.owner_id = owners.id").Where("owners.name = ?", "wang").Rows()
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return
+	//}
+	//defer rows.Close()
+	//
+	//ans := make([]Animal, 0)
+	//for rows.Next() {
+	//	var tmp Animal
+	//	err := rows.Scan(&tmp.ID, &tmp.Name, &tmp.Age, &tmp.OwnerId)
+	//	if err != nil {
+	//		fmt.Println(err)
+	//		return
+	//	}
+	//	ans = append(ans, tmp)
+	//}
+	//
+	//fmt.Println(ans)
+	//
+	//var aos []Animal
+	//db.Table("animals").Joins("join owners on animals.owner_id = owners.id").Where("owners.name = ?", "wang").Scan(&aos)
+	//fmt.Println(aos)
+	//
+	////join 可以多个join接连不断使用，表示多次join
+	//
+	//var ages []sql.NullInt32
+	//db.Table("animals").Where("name = ?", "wang").Pluck("age", &ages)
+	//fmt.Println(ages)
+	//
+	//type Result struct {
+	//	Name string
+	//	Age  int32
+	//}
+	//var result []Result
+	////db.Table("animals").Select("name, age").Where("id in (?)", []int64{1, 5, 9, 12}).Scan(&result)
+	//db.Model(&Animal{}).Select("name, age").Where("id in (?)", []int64{1, 5, 9, 12}).Scan(&result)
+	//fmt.Println(result)
+	//pluck 与 scan 类似，不过 pluck 只获取一列数据， scan 可以获取多列，获取哪几列由结构决定,但是需要使用 table/model 指明所查询对表名
+
+	////////////////////////////////////update data
+
+	//var aps Animal
+	//db.First(&aps)
+	//aps.Name = "dw"
+	//db.Debug().Save(&aps)
+	//
+	//db.Model(&Animal{}).Where("id = ?", 1).Update("name", "xw")
+	//db.Table("animals").Where("id = ?", 1).Update("name", "xw")
+	//db.Model(&Animal{}).Where("id = ?", 2).Updates(map[string]interface{}{"name": "xz", "age": sql.NullInt32{
+	//	Int32: 99,
+	//	Valid: true,
+	//}})
+
+	//save 会将所有列进行设置
+	//update 用于修改单列
+	//updates 用于修改多列， 参数使用 map[string]interface{} 来指定， 若是使用结构体指定 是不会修改指定为零值的列的
+	//这三个方法会调用 before update / after update
+
+	//rowCnt := db.Model(&Animal{}).Where("id = ?", 1).UpdateColumn("name", "wang").RowsAffected
+	//fmt.Println(rowCnt)
+	//db.Model(&Animal{}).Where("id = ?", 2).UpdateColumns(map[string]interface{}{"name": "zhang", "age": sql.NullInt32{
+	//	Int32: 18,
+	//	Valid: true,
+	//}})
+
+	//update column 与 update 相似，但是不会调用 before update / after update
+	//update columns 与 updates 相似，但是不会调用 before update / after update
+	//使用 rows affected 获取实际修改行数
+
+	////////////////////////////////////delete data
+	//db.Where("id = ?", 16).Delete(&Animal{})
+	//db.Where("id = ?", 15).Unscoped().Delete(&Animal{})
+
+	//若是存在delete at , 那么使用 delete 执行的是软删除，要执行硬删除需要使用 unscoped delete
+	//软删除了的数据 query 无法显现， 要显现需要在query中使用 unscoped
 }
+
+//before / after xxx (update/save ...)
+//set   gorm:xxx_option

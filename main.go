@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"time"
+
 	//"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -41,6 +43,38 @@ type Owner struct {
 //	return nil
 //}
 
+type User struct {
+	ID      int64  `gorm:"primary_key;auto_increment:false"`
+	Name    string `gorm:"primary_key"`
+	Profile Profile
+}
+
+type Profile struct {
+	gorm.Model
+	UserID uint
+	Name   string
+	Age    int32
+}
+
+//目前 外键 存在bug, 无法设置。先跳过 Associations 部分
+//目前 db.Transaction 存在bug, 无法处理 panic
+func CreateAnimals(db *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		// do some database operations in the transaction (use 'tx' from this point, not 'db')
+		if err := tx.Create(&Animal{Name: "Giraffe"}).Error; err != nil {
+			// return any error will rollback
+			return err
+		}
+
+		if err := tx.Create(&Animal{Name: "Lion"}).Error; err != nil {
+			return err
+		}
+
+		// return nil will commit
+		return nil
+	})
+}
+
 func main() {
 	db, err := gorm.Open("mysql", "jumper:J1u2m3p!e@r#@tcp(192.168.1.35:3306)/test?loc=Local&parseTime=true&charset=utf8")
 	if err != nil {
@@ -48,12 +82,25 @@ func main() {
 	}
 	defer db.Close()
 
-	// Migrate the schema
+	//db.SetLogger(gorm.Logger{})
+	db.LogMode(true)
+	db.DB().SetMaxOpenConns(100)
+	db.DB().SetMaxIdleConns(10)
+	db.DB().SetConnMaxLifetime(time.Hour)
 
-	////////////////////////////////////create data
+	db.DropTableIfExists("profiles")
+	db.DropTableIfExists("users")
+
+	db.AutoMigrate(&User{})
+	db.AutoMigrate(&Profile{})
+
+	//CreateAnimals(db)
+	////////////////////////////////////Migrate the schema
 	//db.DropTableIfExists("animals")
 	//db.AutoMigrate(&Animal{})
 	//db.AutoMigrate(&Owner{})
+
+	////////////////////////////////////create data
 	//animal := Animal{
 	//	Name: "",
 	//	Age: sql.NullInt32{
@@ -238,6 +285,24 @@ func main() {
 	//
 	//	fmt.Println(t)
 	//}
+
+	//var name string
+	//var age int32
+	//row := db.Table("animals").Where("name = ?", "wang").Select("name, age").Row() // (*sql.Row)
+	//row.Scan(&name, &age)
+	//fmt.Println(name, age)
+	//
+	//rows, err := db.Model(&Animal{}).Where("name = ?", "wang").Select("id, name, age, owner_id").Rows() // (*sql.Rows, error)
+	//defer rows.Close()
+	//
+	//for rows.Next() {
+	//	var user Animal
+	//	// ScanRows scan a row into user
+	//	db.ScanRows(rows, &user)
+	//	fmt.Println(user)
+	//}
+
+	//可以使用 db.ScanRows 将一行数据读入到一个结构体
 	//
 	//fmt.Println("------------------")
 	//
@@ -331,6 +396,7 @@ func main() {
 
 	//若是存在delete at , 那么使用 delete 执行的是软删除，要执行硬删除需要使用 unscoped delete
 	//软删除了的数据 query 无法显现， 要显现需要在query中使用 unscoped
+
 }
 
 //before / after xxx (update/save ...)

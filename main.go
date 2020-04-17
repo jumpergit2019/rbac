@@ -2,8 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
-
 	//"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -26,9 +24,15 @@ import (
 //	return "usertable"
 //}
 type Animal struct {
+	ID      int64
+	Name    string        `gorm:"default:'galeone'"`
+	Age     sql.NullInt32 `gorm:"default:18"`
+	OwnerId int64
+}
+
+type Owner struct {
 	ID   int64
-	Name string        `gorm:"default:'galeone'"`
-	Age  sql.NullInt32 `gorm:"default:18"`
+	Name string
 }
 
 //func (animal *Animal) BeforeCreate(scope *gorm.Scope) error {
@@ -49,7 +53,7 @@ func main() {
 	////////////////////////////////////create data
 	//db.DropTableIfExists("animals")
 	//db.AutoMigrate(&Animal{})
-	//
+	//db.AutoMigrate(&Owner{})
 	//animal := Animal{
 	//	Name: "",
 	//	Age: sql.NullInt32{
@@ -197,56 +201,57 @@ func main() {
 	//只需要获取数量，使用 model + count
 	//需要计算聚合函数，使用 table + select + count
 
-	rows, err := db.Table("animals").Select("id, name, age").Rows()
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var t Animal
-		err := rows.Scan(&t.ID, &t.Name, &t.Age)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		fmt.Println(t)
-	}
-
-	fmt.Println("------------------")
-
-	rows2, err := db.Table("animals").Select("name, sum(age) as ages").Group("name").Having("sum(age) > ?", 50).Rows()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer rows2.Close()
-	for rows2.Next() {
-		var t Animal
-		err := rows2.Scan(&t.Name, &t.Age)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		fmt.Println(t)
-	}
-
-	fmt.Println("------------------")
-
-	type Tmp struct {
-		Name string
-		Ages int32
-	}
-	var tmps []Tmp
-	var cnt int32
-	db.Table("animals").Select("name, sum(age) as ages").Group("name").Having("sum(age) > ?", 50).Scan(&tmps).Count(&cnt)
-	fmt.Println("tmps: ", tmps)
-	fmt.Println("cnt: ", cnt)
+	//rows, err := db.Table("animals").Select("id, name, age").Rows()
+	//
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return
+	//}
+	//defer rows.Close()
+	//for rows.Next() {
+	//	var t Animal
+	//	err := rows.Scan(&t.ID, &t.Name, &t.Age)
+	//	if err != nil {
+	//		fmt.Println(err)
+	//		return
+	//	}
+	//
+	//	fmt.Println(t)
+	//}
+	//
+	//fmt.Println("------------------")
+	//
+	//rows2, err := db.Table("animals").Select("name, sum(age) as ages").Group("name").Having("sum(age) > ?", 50).Rows()
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return
+	//}
+	//defer rows2.Close()
+	//for rows2.Next() {
+	//	var t Animal
+	//	err := rows2.Scan(&t.Name, &t.Age)
+	//	if err != nil {
+	//		fmt.Println(err)
+	//		return
+	//	}
+	//
+	//	fmt.Println(t)
+	//}
+	//
+	//fmt.Println("------------------")
+	//
+	//type Tmp struct {
+	//	Name string
+	//	Ages int32
+	//}
+	//var tmps []Tmp
+	//var cnt int32
+	//db.Table("animals").Select("name, sum(age) as ages").Group("name").Having("sum(age) > ?", 50).Scan(&tmps).Count(&cnt)
+	//fmt.Println("tmps: ", tmps)
+	//fmt.Println("cnt: ", cnt)
 
 	//一般查询也可以使用  table + select + rows, 相对于find/first 可以对每个数据进行进一步操作之后再存入内存（rows.next rows.scan)
 	//分组使用 table + select + group + having + rows/scan
 
+	/////////////////////  https://gorm.io/docs/query.html joins
 }
